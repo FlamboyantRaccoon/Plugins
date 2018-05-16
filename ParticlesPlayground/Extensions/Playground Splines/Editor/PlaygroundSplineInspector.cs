@@ -438,8 +438,8 @@ public class PlaygroundSplineInspector : Editor {
 	private bool callForRemoveNode = false;
 	private void OnSceneGUI () {
 		
-		callForAddNode = (selectedIndex>-1 && Event.current.control && !Event.current.shift && Event.current.type==EventType.mouseUp);
-		callForRemoveNode = (selectedIndex>-1 && Event.current.control && Event.current.shift && Event.current.type==EventType.mouseUp);
+		callForAddNode = (selectedIndex>-1 && Event.current.control && !Event.current.shift && Event.current.type==EventType.MouseUp);
+		callForRemoveNode = (selectedIndex>-1 && Event.current.control && Event.current.shift && Event.current.type==EventType.MouseUp);
 		
 		handleTransform = spline.transform;
 		handleRotation = UnityEditor.Tools.pivotRotation == PivotRotation.Local ? handleTransform.rotation : Quaternion.identity;
