@@ -397,6 +397,7 @@ namespace FMODUnity
         #if UNITY_EDITOR
         public static FMODPlatform GetEditorFMODPlatform()
         {
+            
             switch (EditorUserBuildSettings.activeBuildTarget)
             {
                 case BuildTarget.Android:
