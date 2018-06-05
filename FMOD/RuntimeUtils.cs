@@ -412,8 +412,6 @@ namespace FMODUnity
                 case BuildTarget.StandaloneLinux64:
                 case BuildTarget.StandaloneLinuxUniversal:
                     return FMODPlatform.Linux;
-                case BuildTarget.StandaloneOSXIntel:
-                case BuildTarget.StandaloneOSXIntel64:
                 case BuildTarget.StandaloneOSX:
                     return FMODPlatform.Mac;
                 case BuildTarget.StandaloneWindows:
@@ -422,17 +420,12 @@ namespace FMODUnity
                 case BuildTarget.XboxOne:
                     return FMODPlatform.XboxOne;
                 #if !UNITY_5_0 && !UNITY_5_1
-                case BuildTarget.WiiU:
-                    return FMODPlatform.WiiU;
                 #endif
                 case BuildTarget.WSAPlayer:
                 #if UNITY_2017
                     return FMODPlatform.UWP;
                 #elif !UNITY_5_0 && !UNITY_5_1
-                    if (EditorUserBuildSettings.wsaSDK == WSASDK.UWP)
-                    {
-                        return FMODPlatform.UWP;
-                    }
+                   
                     return FMODPlatform.None;
                 #else
                     if (EditorUserBuildSettings.wsaSDK == WSASDK.PhoneSDK81)

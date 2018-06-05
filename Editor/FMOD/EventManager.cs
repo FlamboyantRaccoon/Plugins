@@ -413,9 +413,7 @@ namespace FMODUnity
         static EventManager()
         {
             countdownTimer = CountdownTimerReset;
-#if !UNITY_2017
-            EditorUserBuildSettings.activeBuildTargetChanged += BuildTargetChanged;
-#endif
+
             EditorApplication.update += Update;
         }
 

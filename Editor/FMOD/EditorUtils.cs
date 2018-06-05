@@ -174,18 +174,10 @@ namespace FMODUnity
         static EditorUtils()
         {
             EditorApplication.update += Update;
-#if UNITY_2017_2
             EditorApplication.playModeStateChanged += HandleOnPlayModeChanged;
-#else
-            EditorApplication.playmodeStateChanged += HandleOnPlayModeChanged;
-#endif
         }
 
-#if UNITY_2017_2
         static void HandleOnPlayModeChanged(PlayModeStateChange state)
-#else
-        static void HandleOnPlayModeChanged()
-#endif
         {
             // Ensure we don't leak system handles in the DLL
             if (EditorApplication.isPlayingOrWillChangePlaymode &&
