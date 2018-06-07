@@ -713,6 +713,15 @@ public sealed class lwTools
 		}
 	}
 
+    public static Color ConvertHexaToColor(int hexaColor)
+    {
+        int r = (hexaColor >> 16) & 255;
+        int g = (hexaColor >> 8) & 255;
+        int b = (hexaColor >> 0) & 255;
+
+        return new Color(((float)r) / 255f, ((float)g) / 255f, ((float)b) / 255f);
+    }
+
     public static float ComputeAngleFromVector(Vector2 vNormalized)
     {
         float fAngle = Mathf.Acos(vNormalized.x) * Mathf.Rad2Deg;
