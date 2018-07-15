@@ -61,13 +61,8 @@ public class lwXmlReader
 	{
 		return m_xr.Read();
 	}
-
-    public bool HasElementEnd()
-    {
-        return m_xr.HasEnd;
-    }
-
-    public string ReadInnerXml()
+	
+	public string ReadInnerXml()
 	{
         string s = "";
         try

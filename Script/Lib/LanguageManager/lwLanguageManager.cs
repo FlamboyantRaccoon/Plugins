@@ -103,7 +103,7 @@ public class lwLanguageManager : lwSingleton<lwLanguageManager>
 			List<lwCountry> availableLanguages = new List<lwCountry>();
 			for( int nLanguageCodeIndex = 0; nLanguageCodeIndex<sLanguageCodes.Length; ++nLanguageCodeIndex )
 			{
-				lwCountry countryStructure = lwCountryCode.GetlwCountry( sLanguageCodes[nLanguageCodeIndex] );
+				lwCountry countryStructure = lwCountryCode.GetlwCountry( sLanguageCodes[nLanguageCodeIndex].Replace("\r", ""));
 				if( countryStructure!= null )
 				{
 					availableLanguages.Add( countryStructure );

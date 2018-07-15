@@ -17,8 +17,8 @@ public sealed class lwRndArray
 	{
 		InitRndArray( nNbrValues, bEnsureNoRepeat );
 	}
-	
-	public void Delete()
+
+    public void Delete()
 	{
 		Destroy();
 	}
@@ -59,7 +59,7 @@ public sealed class lwRndArray
 		m_nFirstFreeByte = 0;
 	}
 
-	public uint ChooseValue()
+	public uint ChooseValue( bool bUseSeed=false )
 	{
 		if( m_nNbrLeft==0 )
 		{
@@ -69,15 +69,31 @@ public sealed class lwRndArray
 		uint nNum = 1;
 		if( m_nNbrLeft>1 )
 		{	
-			nNum = (uint)UnityEngine.Random.Range( 0, (int)m_nNbrLeft-1 ) + 1;
-			//nNum = lwRndHandler.RndRange( 1, m_nNbrLeft+1 ); // (uint)UnityEngine.Random.Range( 1, m_nNbrLeft+1 );
-			if( m_bEnsureNoRepeat && m_nNbrLeft==m_nNbrValues && m_nNbrValues>1 )
+ 
+            if(bUseSeed )
+            {
+                nNum = RrRndHandler.RndRange(1, m_nNbrLeft + 1);
+            }
+            else
+            {
+                nNum = (uint)UnityEngine.Random.Range(0, (int)m_nNbrLeft - 1) + 1;
+            }
+            //nNum = lwRndHandler.RndRange( 1, m_nNbrLeft+1 ); // (uint)UnityEngine.Random.Range( 1, m_nNbrLeft+1 );
+            if ( m_bEnsureNoRepeat && m_nNbrLeft==m_nNbrValues && m_nNbrValues>1 )
 			{
 				while( nNum==m_nLastValue+1 )
 				{
-					nNum = (uint)UnityEngine.Random.Range(0, (int)m_nNbrLeft-1 ) + 1;
-					//nNum = lwRndHandler.RndRange( 1, m_nNbrLeft+1 ); // (uint)UnityEngine.Random.Range( 1, m_nNbrLeft+1 );
-				}
+					
+                    if (bUseSeed)
+                    {
+                        nNum = (uint)(RrRndHandler.RndRange(0, (int)m_nNbrLeft - 1) + 1);
+                    }
+                    else
+                    {
+                        nNum = (uint)UnityEngine.Random.Range(0, (int)m_nNbrLeft - 1) + 1;
+                    }
+                    //nNum = lwRndHandler.RndRange( 1, m_nNbrLeft+1 ); // (uint)UnityEngine.Random.Range( 1, m_nNbrLeft+1 );
+                }
 			}
 		}
 		

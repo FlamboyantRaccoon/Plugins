@@ -359,8 +359,65 @@ public sealed class lwTools
 		return sbTime.ToString();
 	}
 
+    public static string TimeToStringWithDay(uint nTime, bool bSeconds = true)
+    {
+        StringBuilder sbTime = new StringBuilder();
+        uint nMin = nTime / 60;
+        uint nSec = nTime % 60;
+        uint nHours = nMin / 60;
+        nMin -= 60 * nHours;
+        uint nDays = nHours / 24;
+        nHours -= 24 * nDays;
+        
+        if (bSeconds)
+        {
+            if( nDays!=0 )
+            {
+                sbTime = sbTime.AppendFormat("{0:D}d {1:D2}h {2:D2}m {3:D2}s", nDays, nHours, nMin, nSec);
+            }
+            else
+            {
+                if( nHours!=0 )
+                {
+                    sbTime = sbTime.AppendFormat("{0:D2}h {1:D2}m {2:D2}s", nHours, nMin, nSec);
+                }
+                else
+                {
+                    if( nMin!=0 )
+                    {
+                        sbTime = sbTime.AppendFormat("{0:D2}m {1:D2}s", nMin, nSec);
+                    }
+                    else
+                    {
+                        sbTime = sbTime.AppendFormat("{0:D2}s", nSec);
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (nDays != 0)
+            {
+                sbTime = sbTime.AppendFormat("{0:D}d {1:D2}h {2:D2}m", nDays, nHours, nMin);
+            }
+            else
+            {
+                if (nHours != 0)
+                {
+                    sbTime = sbTime.AppendFormat("{0:D2}h {1:D2}m", nHours, nMin);
+                }
+                else
+                {
+                    sbTime = sbTime.AppendFormat("{0:D2}m", nMin);
+                }
+            }
+        }
+        
+        return sbTime.ToString();
+    }
+
 #if UNITY_EDITOR || !UNITY_FLASH
-	public static IEnumerable<string> GetFiles( string sPath, string sFilter=null, bool bFromResources=false )
+    public static IEnumerable<string> GetFiles( string sPath, string sFilter=null, bool bFromResources=false )
 	{
 		Queue<string> queue = new Queue<string>();
 		queue.Enqueue( sPath );
