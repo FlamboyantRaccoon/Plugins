@@ -368,22 +368,22 @@ public sealed class lwTools
         nMin -= 60 * nHours;
         uint nDays = nHours / 24;
         nHours -= 24 * nDays;
-
+        
         if (bSeconds)
         {
-            if (nDays != 0)
+            if( nDays!=0 )
             {
                 sbTime = sbTime.AppendFormat("{0:D}d {1:D2}h {2:D2}m {3:D2}s", nDays, nHours, nMin, nSec);
             }
             else
             {
-                if (nHours != 0)
+                if( nHours!=0 )
                 {
                     sbTime = sbTime.AppendFormat("{0:D2}h {1:D2}m {2:D2}s", nHours, nMin, nSec);
                 }
                 else
                 {
-                    if (nMin != 0)
+                    if( nMin!=0 )
                     {
                         sbTime = sbTime.AppendFormat("{0:D2}m {1:D2}s", nMin, nSec);
                     }
@@ -412,7 +412,7 @@ public sealed class lwTools
                 }
             }
         }
-
+        
         return sbTime.ToString();
     }
 
