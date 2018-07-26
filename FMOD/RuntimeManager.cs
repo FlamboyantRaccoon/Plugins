@@ -1,8 +1,14 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using System.Collections;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Networking;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace FMODUnity
 {
@@ -12,6 +18,7 @@ namespace FMODUnity
         static SystemNotInitializedException initException = null;
         static RuntimeManager instance;
         static bool isQuitting = false;
+
         [SerializeField]
         FMODPlatform fmodPlatform;
         static RuntimeManager Instance
@@ -47,13 +54,17 @@ namespace FMODUnity
 
                     var gameObject = new GameObject("FMOD.UnityIntegration.RuntimeManager");
                     instance = gameObject.AddComponent<RuntimeManager>();
-                    DontDestroyOnLoad(gameObject);
+
+                    if (Application.isPlaying) // This class is used in edit mode by the Timeline auditioning system
+                    {
+                        DontDestroyOnLoad(gameObject);
+                    }
                     gameObject.hideFlags = HideFlags.HideInHierarchy;
 
                     try
                     {
                         #if UNITY_ANDROID && !UNITY_EDITOR
-            
+
                         // First, obtain the current activity context
                         AndroidJavaObject activity = null;
                         using (var activityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
@@ -148,7 +159,7 @@ namespace FMODUnity
                 if (studioSystem.isValid())
                 {
                     studioSystem.release();
-					studioSystem.clearHandle();
+                    studioSystem.clearHandle();
                 }
                 throw new SystemNotInitializedException(result, cause);
             }
@@ -156,6 +167,14 @@ namespace FMODUnity
 
         FMOD.RESULT Initialize()
         {
+            #if UNITY_EDITOR
+                #if UNITY_2017_2_OR_NEWER
+            EditorApplication.playModeStateChanged += HandlePlayModeStateChange;
+                #elif UNITY_2017_1_OR_NEWER
+            EditorApplication.playmodeStateChanged += HandleOnPlayModeChanged;
+                #endif // UNITY_2017_2_OR_NEWER
+            #endif // UNITY_EDITOR
+
             FMOD.RESULT result = FMOD.RESULT.OK;
             FMOD.RESULT initResult = FMOD.RESULT.OK;
             Settings fmodSettings = Settings.Instance;
@@ -178,6 +197,8 @@ namespace FMODUnity
             #else
             advancedSettings.maxFADPCMCodecs = realChannels;
             #endif
+
+            SetThreadAffinity();
 
             #if UNITY_EDITOR || ((UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX) && DEVELOPMENT_BUILD)
             result = FMOD.Debug.Initialize(FMOD.DEBUG_FLAGS.LOG, FMOD.DEBUG_MODE.FILE, null, RuntimeUtils.LogFileName);
@@ -331,6 +352,8 @@ retry:
                 }
 
                 #if UNITY_EDITOR
+                MuteAllEvents(UnityEditor.EditorUtility.audioMasterMute);
+
                 for (int i = eventPositionWarnings.Count - 1; i >= 0; i--)
                 {
                     if (eventPositionWarnings[i].isValid())
@@ -470,6 +493,51 @@ retry:
             isQuitting = true;
         }
 
+#if UNITY_EDITOR
+        public static void Destroy()
+        {
+            if (instance)
+            {
+                if (instance.studioSystem.isValid())
+                {
+                    instance.studioSystem.release();
+                    instance.studioSystem.clearHandle();
+                }
+                DestroyImmediate(instance.gameObject);
+            }
+
+            initException = null;
+            instance = null;
+        }
+
+        #if UNITY_2017_2_OR_NEWER
+        void HandlePlayModeStateChange(PlayModeStateChange state)
+        {
+            if (state == PlayModeStateChange.ExitingEditMode)
+            {
+                Destroy();
+            }
+            else if (state == PlayModeStateChange.EnteredEditMode)
+            {
+                isQuitting = false;
+            }
+        }
+        #elif UNITY_2017_1_OR_NEWER
+        void HandleOnPlayModeChanged()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode &&
+                !EditorApplication.isPlaying)
+            {
+                Destroy();
+            }
+            else if (!EditorApplication.isPlaying)
+            {
+                isQuitting = false;
+            }
+        }
+        #endif // UNITY_2017_2_OR_NEWER
+#endif
+
         void OnApplicationPause(bool pauseStatus)
         {
             if (studioSystem.isValid())
@@ -489,6 +557,54 @@ retry:
             }
         }
 
+        private void loadedBankRegister(LoadedBank loadedBank, string bankPath, string bankName, bool loadSamples, FMOD.RESULT loadResult)
+        {
+            if (loadResult == FMOD.RESULT.OK)
+            {
+                loadedBank.RefCount = 1;
+
+                if (loadSamples)
+                {
+                    loadedBank.Bank.loadSampleData();
+                }
+
+                Instance.loadedBanks.Add(bankName, loadedBank);
+            }
+            else if (loadResult == FMOD.RESULT.ERR_EVENT_ALREADY_LOADED)
+            {
+                // someone loaded this bank directly using the studio API
+                // TODO: will the null bank handle be an issue
+                loadedBank.RefCount = 2;
+                Instance.loadedBanks.Add(bankName, loadedBank);
+            }
+            else
+            {
+                throw new BankLoadException(bankPath, loadResult);
+            }
+        }
+
+#if UNITY_WEBGL
+        IEnumerator loadFromWeb(string bankPath, string bankName, bool loadSamples)
+        {
+            byte[] loadWebResult;
+            FMOD.RESULT loadResult;
+            
+            UnityEngine.Networking.UnityWebRequest www = UnityEngine.Networking.UnityWebRequest.Get(bankPath);
+            yield return www.SendWebRequest();
+            loadWebResult = www.downloadHandler.data;
+
+            LoadedBank loadedBank = new LoadedBank();
+            loadResult = Instance.studioSystem.loadBankMemory(loadWebResult, FMOD.Studio.LOAD_BANK_FLAGS.NORMAL, out loadedBank.Bank);
+            if (loadResult != FMOD.RESULT.OK)
+            {
+                UnityEngine.Debug.LogWarningFormat("loadFromWeb.  Path = {0}, result = {1}.", bankPath, loadResult);
+            }
+            loadedBankRegister(loadedBank, bankPath, bankName, loadSamples, loadResult);
+
+            Debug.LogFormat("Finished loading {0}", bankPath);
+        }
+#endif
+
         public static void LoadBank(string bankName, bool loadSamples = false)
         {
             if (Instance.loadedBanks.ContainsKey(bankName))
@@ -504,7 +620,6 @@ retry:
             }
             else
             {
-                LoadedBank loadedBank = new LoadedBank();
                 string bankPath = RuntimeUtils.GetBankPath(bankName);
                 FMOD.RESULT loadResult;
                 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -519,36 +634,24 @@ retry:
                         }
                         else
                         {
+                            LoadedBank loadedBank = new LoadedBank();
                             loadResult = Instance.studioSystem.loadBankMemory(www.bytes, FMOD.Studio.LOAD_BANK_FLAGS.NORMAL, out loadedBank.Bank);
+                            Instance.loadedBankRegister(loadedBank, bankPath, bankName, loadSamples, loadResult);
                         }
                     }
                 }
                 else
-                #endif
+                #elif UNITY_WEBGL
+                if (bankPath.Contains("://"))
                 {
-                    loadResult = Instance.studioSystem.loadBankFile(bankPath, FMOD.Studio.LOAD_BANK_FLAGS.NORMAL, out loadedBank.Bank);
-                }
-
-                if (loadResult == FMOD.RESULT.OK)
-                {
-                    loadedBank.RefCount = 1;
-                    Instance.loadedBanks.Add(bankName, loadedBank);
-
-                    if (loadSamples)
-                    {
-                        loadedBank.Bank.loadSampleData();
-                    }
-                }
-                else if (loadResult == FMOD.RESULT.ERR_EVENT_ALREADY_LOADED)
-                {
-                    // someone loaded this bank directly using the studio API
-                    // TODO: will the null bank handle be an issue
-                    loadedBank.RefCount = 2;
-                    Instance.loadedBanks.Add(bankName, loadedBank);
+                    Instance.StartCoroutine(Instance.loadFromWeb(bankPath, bankName, loadSamples));
                 }
                 else
+                #endif
                 {
-                    throw new BankLoadException(bankPath, loadResult);
+                    LoadedBank loadedBank = new LoadedBank();
+                    loadResult = Instance.studioSystem.loadBankFile(bankPath, FMOD.Studio.LOAD_BANK_FLAGS.NORMAL, out loadedBank.Bank);
+                    Instance.loadedBankRegister(loadedBank, bankPath, bankName, loadSamples, loadResult);
                 }
             }
         }
@@ -693,7 +796,7 @@ retry:
             FMOD.Studio.EventInstance newInstance;
             eventDesc.createInstance(out newInstance);
 
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             bool is3D = false;
             eventDesc.is3D(out is3D);
             if (is3D)
@@ -702,7 +805,7 @@ retry:
                 newInstance.set3DAttributes(RuntimeUtils.To3DAttributes(new Vector3(1e+18F, 1e+18F, 1e+18F)));
                 instance.eventPositionWarnings.Add(newInstance);
             }
-#endif
+            #endif
 
             return newInstance;
         }
@@ -853,12 +956,25 @@ retry:
             }
         }
 
+#if UNITY_EDITOR
+        /* Only relavant to protect the Play-In-Editor to Editor transition. */
+        public static bool IsQuitting()
+        {
+            return isQuitting;
+        }
+#endif
+
         public static bool HasBanksLoaded
         {
             get
             {
-                return instance.loadedBanks.Count > 1;
+                return Instance.loadedBanks.Count > 1; 
             }
+        }
+
+        public static bool HasBankLoaded(string loadedBank)
+        {
+            return (instance.loadedBanks.ContainsKey(loadedBank));
         }
 
         private void LoadPlugins(Settings fmodSettings)
@@ -886,6 +1002,43 @@ retry:
                 CheckInitResult(result, String.Format("Loading plugin '{0}' from '{1}'", pluginName, pluginPath));
                 loadedPlugins.Add(pluginName, handle);
             }
+            #endif
+        }
+
+        private void SetThreadAffinity()
+        {
+            #if UNITY_PS4 && !UNITY_EDITOR
+            FMOD.PS4.THREADAFFINITY affinity = new FMOD.PS4.THREADAFFINITY
+            {
+                mixer = FMOD.PS4.THREAD.CORE0,
+                studioUpdate = FMOD.PS4.THREAD.CORE0,
+                studioLoadBank = FMOD.PS4.THREAD.CORE0,
+                studioLoadSample = FMOD.PS4.THREAD.CORE0
+            };
+            FMOD.RESULT result = FMOD.PS4.setThreadAffinity(ref affinity);
+            CheckInitResult(result, "FMOD.PS4.setThreadAffinity");
+
+            #elif UNITY_XBOXONE && !UNITY_EDITOR
+            FMOD.XboxOne.THREADAFFINITY affinity = new FMOD.XboxOne.THREADAFFINITY
+            {
+                mixer = FMOD.XboxOne.THREAD.CORE0,
+                studioUpdate = FMOD.XboxOne.THREAD.CORE0,
+                studioLoadBank = FMOD.XboxOne.THREAD.CORE0,
+                studioLoadSample = FMOD.XboxOne.THREAD.CORE0
+            };
+            FMOD.RESULT result = FMOD.XboxOne.setThreadAffinity(ref affinity);
+            CheckInitResult(result, "FMOD.XboxOne.setThreadAffinity");
+
+            #elif UNITY_SWITCH && !UNITY_EDITOR
+            FMOD.Switch.THREADAFFINITY affinity = new FMOD.Switch.THREADAFFINITY
+            {
+                mixer = FMOD.Switch.THREAD.CORE0,
+                studioUpdate = FMOD.Switch.THREAD.CORE0,
+                studioLoadBank = FMOD.Switch.THREAD.CORE0,
+                studioLoadSample = FMOD.Switch.THREAD.CORE0
+            };
+            FMOD.RESULT result = FMOD.Switch.setThreadAffinity(ref affinity);
+            CheckInitResult(result, "FMOD.Switch.setThreadAffinity");
             #endif
         }
 
