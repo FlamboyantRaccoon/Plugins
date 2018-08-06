@@ -263,7 +263,7 @@ public sealed class lwCheatCodes : MonoBehaviour
 	
 	public void UpdateMobileKeyboard()
 	{
-		if( m_tsKeyboard != null && m_tsKeyboard.done )
+		if( m_tsKeyboard != null && m_tsKeyboard.status == TouchScreenKeyboard.Status.Done )
 		{
 			TestInputKeys( m_tsKeyboard.text.ToLower() );
 			m_tsKeyboard = null;
