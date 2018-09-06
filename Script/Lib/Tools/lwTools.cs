@@ -359,7 +359,7 @@ public sealed class lwTools
 		return sbTime.ToString();
 	}
 
-    public static string TimeToStringWithDay(uint nTime, bool bSeconds = true)
+    public static string TimeToStringWithDay(uint nTime, string sDay, string sHours, string sMinute, string sSecond, bool bSeconds = true)
     {
         StringBuilder sbTime = new StringBuilder();
         uint nMin = nTime / 60;
@@ -373,23 +373,23 @@ public sealed class lwTools
         {
             if( nDays!=0 )
             {
-                sbTime = sbTime.AppendFormat("{0:D}d {1:D2}h {2:D2}m {3:D2}s", nDays, nHours, nMin, nSec);
+                sbTime = sbTime.AppendFormat("{0:D}"+ sDay+ " { 1:D2}" + sHours + " {2:D2}" + sMinute + " {3:D2}" + sSecond, nDays, nHours, nMin, nSec);
             }
             else
             {
                 if( nHours!=0 )
                 {
-                    sbTime = sbTime.AppendFormat("{0:D2}h {1:D2}m {2:D2}s", nHours, nMin, nSec);
+                    sbTime = sbTime.AppendFormat("{0:D2}" + sHours + " {1:D2}" + sMinute + " {2:D2}" + sSecond, nHours, nMin, nSec);
                 }
                 else
                 {
                     if( nMin!=0 )
                     {
-                        sbTime = sbTime.AppendFormat("{0:D2}m {1:D2}s", nMin, nSec);
+                        sbTime = sbTime.AppendFormat("{0:D2}" + sMinute + " {1:D2}" + sSecond, nMin, nSec);
                     }
                     else
                     {
-                        sbTime = sbTime.AppendFormat("{0:D2}s", nSec);
+                        sbTime = sbTime.AppendFormat("{0:D2}" + sSecond, nSec);
                     }
                 }
             }
@@ -398,17 +398,17 @@ public sealed class lwTools
         {
             if (nDays != 0)
             {
-                sbTime = sbTime.AppendFormat("{0:D}d {1:D2}h {2:D2}m", nDays, nHours, nMin);
+                sbTime = sbTime.AppendFormat("{0:D}" + sDay + "  {1:D2}" + sHours + " {2:D2}" + sMinute, nDays, nHours, nMin);
             }
             else
             {
                 if (nHours != 0)
                 {
-                    sbTime = sbTime.AppendFormat("{0:D2}h {1:D2}m", nHours, nMin);
+                    sbTime = sbTime.AppendFormat("{0:D2}" + sHours + " {1:D2}" + sMinute, nHours, nMin);
                 }
                 else
                 {
-                    sbTime = sbTime.AppendFormat("{0:D2}m", nMin);
+                    sbTime = sbTime.AppendFormat("{0:D2}" + sMinute, nMin);
                 }
             }
         }
