@@ -76,7 +76,7 @@ public sealed class lwRndArray
             }
             else
             {
-                nNum = (uint)UnityEngine.Random.Range(0, (int)m_nNbrLeft - 1) + 1;
+                nNum = (uint)UnityEngine.Random.Range(1, (int)m_nNbrLeft + 1); // (uint)UnityEngine.Random.Range(0, (int)m_nNbrLeft - 1) + 1;
             }
             //nNum = lwRndHandler.RndRange( 1, m_nNbrLeft+1 ); // (uint)UnityEngine.Random.Range( 1, m_nNbrLeft+1 );
             if ( m_bEnsureNoRepeat && m_nNbrLeft==m_nNbrValues && m_nNbrValues>1 )
