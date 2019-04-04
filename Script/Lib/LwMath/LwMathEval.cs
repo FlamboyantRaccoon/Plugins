@@ -621,7 +621,16 @@ public class lwMathEval
 			}
 			else e.eStatus = FunctionStatus.WrongParameterCount;
 		}
-	}
+        else if (String.Compare(e.sName, "pow", true) == 0)
+        {
+            if (e.fParameters.Count == 2)
+            {
+                e.fResult = Mathf.Pow((float)e.fParameters[0], (float)e.fParameters[1]);
+                e.eStatus = FunctionStatus.OK;
+            }
+            else e.eStatus = FunctionStatus.WrongParameterCount;
+        }
+    }
 	
 	//! @brief	Returns a value that indicates the relative precedence of the specified operator
 	//!
