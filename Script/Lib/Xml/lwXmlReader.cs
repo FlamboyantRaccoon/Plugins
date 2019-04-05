@@ -202,7 +202,7 @@ public class lwXmlReader
 	public float GetAttributeFloat( string sAttr, float fDefault )
 	{
 #if USE_LWXMLPARSER
-		return float.Parse( GetAttribute( sAttr, fDefault.ToString() ) );
+		return float.Parse( GetAttribute( sAttr, fDefault.ToString() ), System.Globalization.CultureInfo.InvariantCulture);
 #else
 		return lwTools.GetXmlAttributeFloat( m_xr, sAttr, fDefault );
 #endif
