@@ -473,7 +473,7 @@ public class lwMathEval
 			// Is this a value token?
 			if( CountDigits( sToken )==sToken.Length )
 			{
-				stack.Push( double.Parse( sToken ) );
+				stack.Push( double.Parse( sToken, System.Globalization.CultureInfo.InvariantCulture) );
 			}
 			else if( sToken=="+" )
 			{
@@ -509,6 +509,14 @@ public class lwMathEval
 			{
 				stack.Push( -stack.Pop() );
 			}
+            else
+            {
+                double d = 0;
+                if( double.TryParse(sToken, out d) )
+                {
+                    stack.Push(d);
+                }
+            }
 		}
 		// Remaining item on stack contains result
 		return( stack.Count>0 ) ? stack.Pop() : 0.0;
