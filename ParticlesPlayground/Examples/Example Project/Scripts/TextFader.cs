@@ -1,14 +1,15 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 public class TextFader : MonoBehaviour {
 
-	GUIText gText;
+	Text gText;
 	Color startColor;
 	Color fadedColor;
 
 	void Start () {
-		gText = GetComponent<GUIText>();
+		gText = GetComponent<Text>();
 		startColor = gText.material.color;
 		fadedColor = new Color(startColor.r, startColor.g, startColor.b, .5f);
 	}

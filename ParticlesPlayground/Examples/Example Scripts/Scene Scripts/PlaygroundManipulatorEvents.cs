@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using ParticlePlayground;
@@ -10,8 +11,8 @@ public class PlaygroundManipulatorEvents : MonoBehaviour {
 	public PlaygroundParticlesC popTurbulenceParticles;		// The small bubbles when a bubble pops
 	public float maxRandomTurbulence = 1f;					// The maximum random velocity for popTurbulenceParticles
 	public float guiUpdateTime = .25f;						// The time between gui updates for the upper left info text
-	public GUIText text;									// The upper left info text
-	public GUIText popText;									// The text to display whenever highest pop changes
+	public Text text;									// The upper left info text
+	public Text popText;									// The text to display whenever highest pop changes
 
 	ManipulatorObjectC manipulator;							// Cached manipulator
 
@@ -83,7 +84,6 @@ public class PlaygroundManipulatorEvents : MonoBehaviour {
 				popText.text = highestPop.ToString();
 				Vector2 pixelOffset = mainCamera.WorldToScreenPoint(manipulatorTransform.position);
 				pixelOffset.y += 50;
-				popText.pixelOffset = pixelOffset;
 
 				int highestNow = highestPop;
 				while (popTextColor.a>0 && highestNow==highestPop) {
