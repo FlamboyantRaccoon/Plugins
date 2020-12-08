@@ -70,7 +70,7 @@ public sealed class lwCheatCodes : MonoBehaviour
 			OpenX360Keyboard();
 		}
 #endif
-		
+/*		
 		if( Input.anyKey )
 		{
 			m_fLastKeyTime = Time.realtimeSinceStartup;
@@ -85,7 +85,7 @@ public sealed class lwCheatCodes : MonoBehaviour
 		{
 			if( TestInputKeys( m_sKeys ) )
 				m_sKeys = "";
-		}
+		}*/
 	}
 	
 	/// <summary>
