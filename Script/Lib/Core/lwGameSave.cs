@@ -279,8 +279,9 @@ public sealed class lwGameSave
 		return m_sDistribName + "_" + m_sGameSeriesName;
 #else
 #if HAS_LOCALFS
-		string sAppData = Environment.GetFolderPath( Environment.SpecialFolder.ApplicationData );
-		sAppData += "/" + m_sDistribName + "/" + m_sGameSeriesName; 
+//		string sAppData = Environment.GetFolderPath( Environment.SpecialFolder.ApplicationData );
+        string sAppData = Application.persistentDataPath;
+        //sAppData += "/" + m_sDistribName + "/" + m_sGameSeriesName; 
 #else
 		string sAppData = Application.persistentDataPath;
 #endif
@@ -325,11 +326,11 @@ public sealed class lwGameSave
 #else
 		if( m_bUsePlayerPrefs ) return;
 #if HAS_LOCALFS
-		string sAppData = Environment.GetFolderPath( Environment.SpecialFolder.ApplicationData );
-		sAppData += "/" + m_sDistribName;
+		string sAppData = Application.persistentDataPath; //Environment.GetFolderPath( Environment.SpecialFolder.ApplicationData );
+		/*sAppData += "/" + m_sDistribName;
 		if( !Directory.Exists( sAppData ) ) Directory.CreateDirectory( sAppData );
 		sAppData += "/" + m_sGameSeriesName;
-		if( !Directory.Exists( sAppData ) ) Directory.CreateDirectory( sAppData );
+		if( !Directory.Exists( sAppData ) ) Directory.CreateDirectory( sAppData );*/
 #endif
 #endif
 	}
