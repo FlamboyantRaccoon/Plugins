@@ -35,6 +35,7 @@ public class RRSoundManager : lwSingletonMonoBehaviour<RRSoundManager>
 
     public int PlaySound(string sFileName)
     {
+        //Debug.Log("PlaySound " + sFileName);
         int index = GetFreeAudioSourceIndex();
         if (index >= 0)
         {
@@ -57,7 +58,7 @@ public class RRSoundManager : lwSingletonMonoBehaviour<RRSoundManager>
         }
     }
 
-    public void PlayPersistentSound(string sSoundName)
+    public void PlayPersistentSound(string sSoundName, string sPath="")
     {
         //Debug.Log("PlayPersistentSoundStatic : " + sSoundName);
         if (m_persistentSound == null)
@@ -70,7 +71,12 @@ public class RRSoundManager : lwSingletonMonoBehaviour<RRSoundManager>
         {
             return;
         }
-        sound = PlaySound(sSoundName);
+
+        if( string.IsNullOrEmpty( sPath) )
+        {
+            sPath = sSoundName;
+        }
+        sound = PlaySound(sPath);
         if( sound >= 0)
         {
             m_sfxSources[sound].loop = true;
@@ -92,6 +98,38 @@ public class RRSoundManager : lwSingletonMonoBehaviour<RRSoundManager>
         {
             m_sfxSources[sound].Stop();
             m_persistentSound.Remove(sSoundName);
+        }
+    }
+
+    public void PausePersistentSound(string sSoundName)
+    {
+        //Debug.Log("StopPersistentSoundStatic : " + sSoundName);
+
+        if (m_persistentSound == null)
+        {
+            return;
+        }
+
+        int sound;
+        if (m_persistentSound.TryGetValue(sSoundName, out sound))
+        {
+            m_sfxSources[sound].Pause();
+        }
+    }
+
+    public void ResumePersistentSound(string sSoundName)
+    {
+        //Debug.Log("StopPersistentSoundStatic : " + sSoundName);
+
+        if (m_persistentSound == null)
+        {
+            return;
+        }
+
+        int sound;
+        if (m_persistentSound.TryGetValue(sSoundName, out sound))
+        {
+            m_sfxSources[sound].UnPause();
         }
     }
 
