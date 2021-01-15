@@ -176,7 +176,7 @@ public class lwLanguageManager : lwSingleton<lwLanguageManager>
 		int nLanguageIndex = 0;
 		while( nLanguageIndex<m_availableLanguages.Length && nSystemLanguageIndex<0 )
 		{
-			if( m_availableLanguages[nLanguageIndex].m_eLang==Application.systemLanguage )
+			if(IsSystemCountry(m_availableLanguages[nLanguageIndex]) )
 			{
 				nSystemLanguageIndex = nLanguageIndex;
 			}
@@ -203,6 +203,38 @@ public class lwLanguageManager : lwSingleton<lwLanguageManager>
 			SetLanguage( 0 );
 		}
 	}
+
+    public bool IsSystemCountry( lwCountry country )
+    {
+        if( country.m_eLang != Application.systemLanguage )
+        {
+            return false;
+        }
+
+        if( country.m_eLang!= SystemLanguage.English)
+        {
+            return true;
+        }
+
+        try
+        {
+            System.Globalization.RegionInfo regionInfo = System.Globalization.RegionInfo.CurrentRegion;
+            if (regionInfo != null )
+            {
+                if(regionInfo.TwoLetterISORegionName.ToUpper() == "GB" )
+                {
+                    return country.m_sLanguageCulture == "en-UK";
+                }
+                return country.m_sLanguageCulture == "en-US";
+            }
+            return true;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("System.Globalization doesn't work");
+            return true;
+        }
+    }
 
 	/// <summary>
 	/// Sets the language.
