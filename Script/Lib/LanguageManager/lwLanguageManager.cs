@@ -535,7 +535,7 @@ public class lwLanguageManager : lwSingleton<lwLanguageManager>
 						// localized resource
 						else
 						{
-							Debug.LogWarning( "Not integrate yet" ); 
+//							Debug.LogWarning( "Not integrate yet " + sKeyValuePair[0]); 
 						}
 					}
 				}

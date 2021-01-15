@@ -29,7 +29,8 @@ public sealed class lwCountryCode
 	{
 		new lwCountry( SystemLanguage.German,				"de", "de-DE", "Deutsch",		"German",		true ),
 		new lwCountry( SystemLanguage.English,				"en", "en-US", "English",		"English",		true ),
-		new lwCountry( SystemLanguage.Spanish,				"es", "es-ES", "Español",		"Spanish",		true ),
+        new lwCountry( SystemLanguage.English,              "en", "en-UK", "English",       "English",      true ),
+        new lwCountry( SystemLanguage.Spanish,				"es", "es-ES", "Español",		"Spanish",		true ),
 		new lwCountry( SystemLanguage.French,				"fr", "fr-FR", "Français",		"French",		true ),
 		new lwCountry( SystemLanguage.Italian,				"it", "it-IT", "Italiano",		"Italian",		true ),
 		new lwCountry( SystemLanguage.Japanese,				"ja", "ja-JP", "日本語",			"Japanese",		false ),
