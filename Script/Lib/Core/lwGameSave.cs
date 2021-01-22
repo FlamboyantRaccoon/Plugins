@@ -3,6 +3,7 @@
 	#define HAS_LOCALFS
 #endif
 
+
 // Enable the following define only if you want to use System.Xml class,
 // which is not available on Unity Flash builds
 //#define SYSTEMXML_SERIALIZER
@@ -24,8 +25,14 @@ using System.Xml.Serialization;
 public sealed class lwGameSave
 {
 	private bool m_bUsePlayerPrefs = false;
+
+    private bool m_bUseExternalFileManagement = false;
+    private System.Func<string, string, bool> m_saveDlg = null;
+    private System.Func<string, string> m_loadDlg = null;
+
+
 #if !UNITY_FLASH && !UNITY_WEBPLAYER
-	private bool m_bRc4Encoding = false;
+    private bool m_bRc4Encoding = false;
 #endif
 	private bool m_bAutoSaveLoad = true;
 	private bool m_bIsSaving = false;
@@ -33,7 +40,7 @@ public sealed class lwGameSave
 	private Dictionary<string,string> m_savedData = null;
 #if HAS_LOCALFS || UNITY_XBOX360 || UNITY_PS3
 	private string m_sDistribName = ""; 
-	private string m_sGameSeriesName = ""; 
+	private string m_sGameSeriesName = "";
 #endif
 #if UNITY_XBOX360 && !UNITY_EDITOR
 	X360SaveGame m_X360sg = null;
@@ -41,8 +48,7 @@ public sealed class lwGameSave
 	byte[] m_pX360Buffer = null;
 	bool m_bX360HasResult = false;
 #endif
-	
-	public lwGameSave( string sDistribName, string sGameSeriesName )
+    public lwGameSave( string sDistribName, string sGameSeriesName )
 	{
 		Init( sDistribName, sGameSeriesName, !HasLocalStorage(), false, true );
 	}
@@ -61,14 +67,24 @@ public sealed class lwGameSave
 	{
 		Init( sDistribName, sGameSeriesName, bUsePlayerPrefs, bRc4Encoding, bAutoSaveLoad );
 	}
-	
-	private void Init( string sDistribName, string sGameSeriesName, bool bUsePlayerPrefs, bool bRc4Encoding, bool bAutoSaveLoad )
+
+    public lwGameSave(string sDistribName, string sGameSeriesName, bool bUsePlayerPrefs, bool bRc4Encoding, bool bAutoSaveLoad, bool external, 
+        System.Func<string, string, bool> saveDlg,
+        System.Func<string, string> loadDlg )
+    {
+        m_bUseExternalFileManagement = external;
+        m_saveDlg = saveDlg;
+        m_loadDlg = loadDlg;
+        Init(sDistribName, sGameSeriesName, bUsePlayerPrefs, bRc4Encoding, bAutoSaveLoad);
+    }
+
+    private void Init( string sDistribName, string sGameSeriesName, bool bUsePlayerPrefs, bool bRc4Encoding, bool bAutoSaveLoad )
 	{
 #if UNITY_IPHONE
 		System.Environment.SetEnvironmentVariable( "MONO_REFLECTION_SERIALIZER", "yes" );
 #endif
 
-#if !UNITY_XBOX360 && !UNITY_PS3
+#if !UNITY_XBOX360 && !UNITY_PS3 && !UNITY_SWITCH
 		m_bUsePlayerPrefs = bUsePlayerPrefs;
 #endif
 #if !UNITY_FLASH && !UNITY_WEBPLAYER
@@ -78,7 +94,7 @@ public sealed class lwGameSave
 		
 		if( !m_bUsePlayerPrefs )
 		{
-#if HAS_LOCALFS || UNITY_XBOX360 || UNITY_PS3
+#if HAS_LOCALFS || UNITY_XBOX360 || UNITY_PS3 || UNITY_SWITCH
 			m_sDistribName = sDistribName;
 			m_sGameSeriesName = sGameSeriesName;
 #endif
@@ -275,7 +291,7 @@ public sealed class lwGameSave
 	
 	private string GetFileName( bool bSerialized )
 	{
-#if UNITY_XBOX360 || UNITY_PS3
+#if UNITY_XBOX360 || UNITY_PS3 || ( UNITY_SWITCH && !UNITY_EDITOR)
 		return m_sDistribName + "_" + m_sGameSeriesName;
 #else
 #if HAS_LOCALFS
@@ -324,7 +340,7 @@ public sealed class lwGameSave
 		PS3SaveDataUtility.SetSaveParams( 0, "Icon.png", m_sGameSeriesName, GetFileName(), "Description" );
 		PS3SaveDataUtility.SetLoadParams( 0 );
 #else
-		if( m_bUsePlayerPrefs ) return;
+        if ( m_bUsePlayerPrefs || m_bUseExternalFileManagement) return;
 #if HAS_LOCALFS
 		string sAppData = Application.persistentDataPath; //Environment.GetFolderPath( Environment.SpecialFolder.ApplicationData );
 		/*sAppData += "/" + m_sDistribName;
@@ -387,6 +403,11 @@ public sealed class lwGameSave
 			while( !PS3SaveDataUtility.HasCompleted() );
 			return ( PS3SaveDataUtility.GetResult()==0 );
 #else
+            if( m_bUseExternalFileManagement )
+            {
+                return m_saveDlg(sFileName, sContent);
+            }
+
 			if( m_bRc4Encoding )
 				lwTools.SaveEncryptedTextFile( sFileName + ".enc" , sContent );
 			else
@@ -441,37 +462,48 @@ public sealed class lwGameSave
 				return false;
 			}
 #else
-			if( m_bRc4Encoding )
-				sFileName += ".enc";
-			else
-				sFileName += ".sav";
-			
-			if( !File.Exists( sFileName ) )
-			{
-				if( m_bAutoSaveLoad )
-					Save();
-				else
-					return false;
-			}
-			
-			if( m_bRc4Encoding )
-			{
-				byte[] bBinary = File.ReadAllBytes( sFileName );
-				if( bBinary==null )
-				{
-					Debug.LogWarning( "Unable to load " + sFileName );
-					return false;
-				}
-				else
-				{
-					lwRC4 rc4 = new lwRC4();
-					sContent = rc4.EncryptToString( bBinary );
-				}
-			}
-			else
-			{
-				sContent = File.ReadAllText( sFileName );
-			}
+            if( m_bUseExternalFileManagement )
+            {
+                sContent = m_loadDlg(sFileName);
+                if( sContent==null )
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (m_bRc4Encoding)
+                    sFileName += ".enc";
+                else
+                    sFileName += ".sav";
+
+                if (!File.Exists(sFileName))
+                {
+                    if (m_bAutoSaveLoad)
+                        Save();
+                    else
+                        return false;
+                }
+
+                if (m_bRc4Encoding)
+                {
+                    byte[] bBinary = File.ReadAllBytes(sFileName);
+                    if (bBinary == null)
+                    {
+                        Debug.LogWarning("Unable to load " + sFileName);
+                        return false;
+                    }
+                    else
+                    {
+                        lwRC4 rc4 = new lwRC4();
+                        sContent = rc4.EncryptToString(bBinary);
+                    }
+                }
+                else
+                {
+                    sContent = File.ReadAllText(sFileName);
+                }
+            }
 #endif
 			
 			StringReader sr = new StringReader( sContent );
