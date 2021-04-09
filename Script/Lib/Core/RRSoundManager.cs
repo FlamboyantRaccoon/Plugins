@@ -97,6 +97,7 @@ public class RRSoundManager : lwSingletonMonoBehaviour<RRSoundManager>
         if (m_persistentSound.TryGetValue(sSoundName, out sound))
         {
             m_sfxSources[sound].Stop();
+            m_sfxSources[sound].loop = false;
             m_persistentSound.Remove(sSoundName);
         }
     }
