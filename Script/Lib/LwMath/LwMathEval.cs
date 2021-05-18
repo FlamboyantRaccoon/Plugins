@@ -497,7 +497,9 @@ public class lwMathEval
 			{
 				fTmp1 = stack.Pop();
 				fTmp2 = stack.Pop();
-				stack.Push( fTmp2/fTmp1 );
+                double result = fTmp2 / fTmp1;
+                //Debug.Log("division " + fTmp2 + " / " + fTmp1 + " = " + result);
+				stack.Push( result );
 			}
 			else if( sToken=="^" )
 			{
